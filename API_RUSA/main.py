@@ -40,6 +40,7 @@ def execute(auxsql):
 
     # Return data
     return data
+current_idio = 'en'
 # ================================================================
 #                 A P I R E S T F U L S E R V I C E
 # ================================================================
@@ -62,10 +63,22 @@ def forbiden(error):
 def not_found(error):
     return make_response(jsonify({'error': 'Not found....!'}), 404)
 
+#Chaging Idiom
+@app.route('/set-language/<idio>', methods=['POST'])
+def set_language(idio):
+    global current_idio
+    if idio in ['en', 'ru']:
+        current_idio = idio
+        return jsonify({'message': f'Language Set to {idio}'}), 200
+    else:
+        return jsonify({'error': 'Invalid Language'}), 400
+
+
 # Get Aircraft
 @app.route('/aircraft', methods=['GET'])
 def get_aircraft():
-    resu = execute("select ad.aircraft_code, ad.model->'en', ad.range from aircrafts_data ad")
+    global current_idio
+    resu = execute(f"select ad.aircraft_code, ad.model->'{current_idio}', ad.range from aircrafts_data ad")
     if resu != None:
          salida = {"status_code": 200,
                    "status": "OK",
@@ -84,7 +97,7 @@ def get_aircraft():
 # Codigo aeropueto
 @app.route('/airports', methods=['GET'])
 def get_airportsByCode():
-    resu = execute("select airport_code, airport_name, city->'en', coordinates, timezone from airports_data ab")
+    resu = execute(f"select airport_code, airport_name, city->'{current_idio}', coordinates, timezone from airports_data ab")
     if resu != None:
         salida = {"status_code": 200,
                   "status": "OK",
@@ -107,7 +120,8 @@ def get_airportsByCode():
 @app.route('/ppl', methods=['GET'])
 def get_airportsByPersona():
     resu = execute("SELECT flights.flight_id, ticket_flights.ticket_no, tickets.passenger_id,tickets.passenger_name,tickets.contact_data,"
-    "ticket_flights.fare_conditions, flights.departure_airport, flights.arrival_airport,flights.actual_departure, flights.actual_arrival FROM tickets INNER JOIN ticket_flights ON tickets.ticket_no = ticket_flights.ticket_no INNER JOIN flights ON ticket_flights.flight_id = flights.flight_id;")
+    "ticket_flights.fare_conditions, flights.departure_airport, flights.arrival_airport,flights.actual_departure, flights.actual_arrival FROM tickets INNER JOIN ticket_flights ON tickets.ticket_no = ticket_flights.ticket_no "
+    "INNER JOIN flights ON ticket_flights.flight_id = flights.flight_id WHERE flights.flight_id =2666;;")
     if resu != None:
         salida = {"status_code": 200,
                   "status": "OK",
